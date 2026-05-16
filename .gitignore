@@ -6,6 +6,11 @@ __pycache__/
 .pytest_cache/
 .venv/
 
+# Environment files (contains API keys)
+.env
+*.env
+!.env.example
+
 # Local runtime data
 .aether_data/
 

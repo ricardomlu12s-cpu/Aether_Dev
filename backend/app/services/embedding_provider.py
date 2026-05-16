@@ -2,10 +2,13 @@ from __future__ import annotations
 
 import json
 import math
+import ssl
 from collections import Counter
 from typing import Protocol
 from urllib import request
 from urllib.error import HTTPError, URLError
+
+import certifi
 
 from ..config import (
     EMBEDDING_API_KEY,
@@ -13,6 +16,8 @@ from ..config import (
     EMBEDDING_MODEL,
     EMBEDDING_PROVIDER,
 )
+
+_SSL_CONTEXT = ssl.create_default_context(cafile=certifi.where())
 
 
 class EmbeddingProvider(Protocol):
@@ -72,7 +77,7 @@ class OpenAIEmbeddingProvider:
             method="POST",
         )
         try:
-            with request.urlopen(req, timeout=60) as response:
+            with request.urlopen(req, timeout=60, context=_SSL_CONTEXT) as response:
                 data = json.loads(response.read().decode("utf-8"))
         except HTTPError as exc:
             detail = exc.read().decode("utf-8", errors="replace")

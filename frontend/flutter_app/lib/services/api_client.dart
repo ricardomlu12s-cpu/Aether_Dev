@@ -42,6 +42,25 @@ class ApiClient {
     return _decode(response);
   }
 
+  Future<dynamic> put(
+    String path,
+    Map<String, dynamic> body, {
+    bool admin = false,
+  }) async {
+    final client = HttpClient();
+    final request = await client.putUrl(Uri.parse('$baseUrl$path'));
+    request.headers.contentType = ContentType.json;
+    if (admin) {
+      request.headers.set(
+        HttpHeaders.authorizationHeader,
+        'Bearer $adminToken',
+      );
+    }
+    request.write(jsonEncode(body));
+    final response = await request.close();
+    return _decode(response);
+  }
+
   Future<dynamic> delete(String path, {bool admin = false}) async {
     final client = HttpClient();
     final request = await client.deleteUrl(Uri.parse('$baseUrl$path'));

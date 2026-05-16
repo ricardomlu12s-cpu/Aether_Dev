@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .database import init_db
-from .routers import chat, conversations, developer, emotion, health, memory, plugins
+from .routers import chat, conversations, developer, emotion, health, memory, plugins, settings_router
 from .services.plugin_runtime import plugin_runtime
 
 
@@ -26,6 +26,7 @@ def create_app() -> FastAPI:
     app.include_router(emotion.router)
     app.include_router(developer.router)
     app.include_router(plugins.router)
+    app.include_router(settings_router.router)
     return app
 
 

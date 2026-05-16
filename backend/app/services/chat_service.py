@@ -77,7 +77,7 @@ class ChatService:
             ).fetchall()
         return [dict(row) for row in reversed(rows)]
 
-    def send_message(self, content: str, conversation_id: str | None = None) -> dict:
+    def send_message(self, content: str, conversation_id: str | None = None, language: str = "auto") -> dict:
         if conversation_id is None:
             conversation = self.create_conversation(title=content[:32] or "New Conversation")
             conversation_id = conversation["id"]
@@ -95,6 +95,7 @@ class ChatService:
                 l1_messages=l1_context,
                 memories=retrieved,
                 emotion_state=emotion,
+                language=language,
             )
         )
         spoken = model_result.spoken_words

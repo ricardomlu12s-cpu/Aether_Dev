@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'screens/chat_screen.dart';
 import 'screens/developer_dashboard.dart';
 import 'screens/memory_viewer.dart';
+import 'screens/settings_screen.dart';
 import 'services/app_launcher.dart';
 
 void main() {
@@ -69,6 +70,7 @@ class _ShellScreenState extends State<ShellScreen> {
     final pages = [
       const ChatScreen(),
       const MemoryViewer(),
+      const SettingsScreen(),
       const DeveloperDashboard(),
     ];
 
@@ -90,6 +92,11 @@ class _ShellScreenState extends State<ShellScreen> {
                 icon: Icon(Icons.storage_outlined),
                 selectedIcon: Icon(Icons.storage),
                 label: Text('Memory'),
+              ),
+              NavigationRailDestination(
+                icon: Icon(Icons.settings_outlined),
+                selectedIcon: Icon(Icons.settings),
+                label: Text('Settings'),
               ),
               NavigationRailDestination(
                 icon: Icon(Icons.dashboard_outlined),

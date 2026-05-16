@@ -12,6 +12,7 @@ class ConversationCreate(BaseModel):
 class ChatMessageRequest(BaseModel):
     conversation_id: str | None = None
     content: str = Field(min_length=1)
+    language: str = "auto"
 
 
 class MemoryWriteRequest(BaseModel):

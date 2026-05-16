@@ -1,19 +1,37 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
+import ssl
+from dataclasses import dataclass, field
 from typing import Protocol
 from urllib import request
 from urllib.error import HTTPError, URLError
 
+import certifi
+
 from ..config import MODEL_API_KEY, MODEL_BASE_URL, MODEL_NAME, MODEL_PROVIDER
+
+_SSL_CONTEXT = ssl.create_default_context(cafile=certifi.where())
+
+
+LANGUAGE_PROMPTS = {
+    "zh": "请用中文回答。",
+    "en": "Please respond in English.",
+    "ja": "日本語で回答してください。",
+    "ko": "한국어로 응답해 주세요.",
+    "fr": "Veuillez répondre en français.",
+    "de": "Bitte antworten Sie auf Deutsch.",
+    "auto": "",
+}
+
 
 @dataclass(frozen=True)
 class ModelContext:
     user_input: str
-    l1_messages: list[dict]
-    memories: list[dict]
-    emotion_state: dict
+    l1_messages: list[dict] = field(default_factory=list)
+    memories: list[dict] = field(default_factory=list)
+    emotion_state: dict = field(default_factory=dict)
+    language: str = "auto"
 
 
 @dataclass(frozen=True)
@@ -56,13 +74,19 @@ class OpenAICompatibleProvider:
 
     def generate(self, context: ModelContext) -> ModelResult:
         if not self.api_key:
-            raise RuntimeError("AETHER_MODEL_API_KEY is required for OpenAI-compatible provider")
+            raise RuntimeError("API key is required. Please configure it in Settings.")
 
+        lang_instruction = LANGUAGE_PROMPTS.get(context.language, "")
         memory_block = "\n".join(f"- {item['summary']}" for item in context.memories[:6]) or "- none"
         l1_block = "\n".join(f"{item['role']}: {item['content']}" for item in context.l1_messages[-10:])
-        prompt = (
+        system_prompt = (
             "You are Aether Dev, a developer-side digital life system under construction. "
-            "Answer clearly and keep developer continuity. Do not reveal chain-of-thought.\n\n"
+            "Answer clearly and keep developer continuity. Do not reveal chain-of-thought."
+        )
+        if lang_instruction:
+            system_prompt += f" {lang_instruction}"
+
+        prompt = (
             f"Emotion state: {context.emotion_state}\n"
             f"Relevant memories:\n{memory_block}\n\n"
             f"Recent conversation:\n{l1_block}\n\n"
@@ -71,7 +95,7 @@ class OpenAICompatibleProvider:
         payload = {
             "model": self.model,
             "messages": [
-                {"role": "system", "content": "Return only the spoken response text."},
+                {"role": "system", "content": system_prompt},
                 {"role": "user", "content": prompt},
             ],
             "temperature": 0.7,
@@ -86,7 +110,7 @@ class OpenAICompatibleProvider:
             method="POST",
         )
         try:
-            with request.urlopen(req, timeout=60) as response:
+            with request.urlopen(req, timeout=60, context=_SSL_CONTEXT) as response:
                 data = json.loads(response.read().decode("utf-8"))
         except HTTPError as exc:
             detail = exc.read().decode("utf-8", errors="replace")
@@ -106,21 +130,42 @@ class ModelGateway:
     def __init__(self) -> None:
         self.provider: ModelProvider = self._load_provider()
 
+    def _read_model_settings(self) -> dict:
+        try:
+            from ..database import connect
+            with connect() as conn:
+                row = conn.execute("SELECT value_json FROM app_settings WHERE key = 'model'").fetchone()
+            if row:
+                return json.loads(row["value_json"])
+        except Exception:
+            pass
+        return {}
+
     def _load_provider(self) -> ModelProvider:
-        if MODEL_PROVIDER in {"openai", "openai_compatible"}:
-            return OpenAICompatibleProvider(MODEL_BASE_URL, MODEL_API_KEY, MODEL_NAME)
+        settings = self._read_model_settings()
+        provider = settings.get("provider") or MODEL_PROVIDER
+        if provider in {"openai", "openai_compatible"}:
+            base_url = settings.get("base_url") or MODEL_BASE_URL
+            api_key = settings.get("api_key") or MODEL_API_KEY
+            model = settings.get("model") or MODEL_NAME
+            if api_key:
+                return OpenAICompatibleProvider(base_url, api_key, model)
         return MockModelProvider()
+
+    def reload(self) -> None:
+        self.provider = self._load_provider()
 
     def generate(self, context: ModelContext) -> ModelResult:
         return self.provider.generate(context)
 
     def status(self) -> dict:
+        settings = self._read_model_settings()
         return {
             "provider": self.provider.name,
-            "configured_provider": MODEL_PROVIDER,
-            "model": MODEL_NAME if self.provider.name != "mock" else None,
-            "base_url": MODEL_BASE_URL if self.provider.name != "mock" else None,
-            "ready_for_adapters": ["openai", "claude", "local_model"],
+            "configured_provider": settings.get("provider") or MODEL_PROVIDER,
+            "model": settings.get("model") or MODEL_NAME,
+            "base_url": settings.get("base_url") or MODEL_BASE_URL,
+            "ready_for_adapters": ["openai", "deepseek", "claude", "local_model"],
         }
 
 

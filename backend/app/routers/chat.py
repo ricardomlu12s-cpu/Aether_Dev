@@ -10,7 +10,7 @@ router = APIRouter()
 
 @router.post("/chat/message")
 def send_message(payload: ChatMessageRequest) -> dict:
-    return chat_service.send_message(payload.content, payload.conversation_id)
+    return chat_service.send_message(payload.content, payload.conversation_id, payload.language)
 
 
 @router.websocket("/ws/chat/{conversation_id}")
