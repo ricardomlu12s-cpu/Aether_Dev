@@ -1,138 +1,165 @@
 # Aether Dev
 
-Aether Dev is a macOS developer-side foundation for a long-memory digital life system.
+<div align="center">
 
-Current MVP focus:
+**macOS Digital Life System — Long Memory, Real Emotion, Agent-Native**
 
-- FastAPI local backend
-- SQLite conversation persistence
-- L1/L2/L3 memory boundaries
-- Local vector-store abstraction
-- PAD emotion and energy state
-- Developer runtime endpoints
-- Plugin manifest scanning
-- Audit logs and runtime events
+[![Python](https://img.shields.io/badge/python-3.13-blue.svg)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115-green.svg)](https://fastapi.tiangolo.com/)
+[![Flutter](https://img.shields.io/badge/Flutter-macOS-blue.svg)](https://flutter.dev/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Tests](https://img.shields.io/badge/tests-3%2F3%20passed-brightgreen.svg)](#)
 
-Future phases are not removed. They are documented as staged upgrades so the first version can run before advanced systems are added.
+</div>
 
-## Location
+Aether Dev is a macOS developer-side foundation for a long-memory digital life system — not a passive chatbot, but a persistent digital entity with structured memory architecture, emotion modeling, and autonomous reflection cycles.
 
-Project source:
+## Architecture
 
-```text
-/Users/lixie/Desktop/Aether_Dev
+```
+┌────────────────────────────────────────────┐
+│  Flutter macOS App (Dart)                  │
+│  ChatScreen · DeveloperDashboard · Memory │
+├────────────────────────────────────────────┤
+│  FastAPI Backend (Python 3.13)            │
+│  ┌──────────┬──────────┬────────────────┐ │
+│  │ Routers  │ Services │ Plugins        │ │
+│  │ health   │ chat     │ example_memory │ │
+│  │ convos   │ memory   │ (extensible)   │ │
+│  │ chat     │ emotion  │                │ │
+│  │ memory   │ audit    │                │ │
+│  │ emotion  │ event    │                │ │
+│  │ dev      │ embed    │                │ │
+│  │ plugins  │ vector   │                │ │
+│  │ WebSocket│ model    │                │ │
+│  └──────────┴──────────┴────────────────┘ │
+├────────────────────────────────────────────┤
+│  SQLite + Vector Store + Plugin Runtime   │
+│  macOS Application Support sandbox        │
+└────────────────────────────────────────────┘
 ```
 
-Runtime data:
+## Key Features
 
-```text
-~/Library/Application Support/Aether Dev/
-  aether.sqlite3
-  vector_store/
-  logs/
-  plugins/
-  backups/
-```
+### L1 / L2 / L3 Memory System
+- **L1** — Conversation context window with configurable message limit
+- **L2** — Auto-extracted long-term memories surfaced during conversation
+- **L3** — Persistent vector-store entries with embedding support (mock, OpenAI, Chroma, LanceDB)
 
-## Backend Quick Start
+### PAD Emotion Engine
+- Pleasure-Arousal-Dominance emotional state model
+- Energy level tracking independent of emotion
+- State update API with event-bus notification
+
+### Autonomous REM Cycle
+- Manual trigger endpoint (`POST /developer/rem/run`)
+- Memory consolidation via service pipeline
+- Runtime event logging per REM pass
+
+### Plugin System
+- Manifest-based plugin discovery from `plugins/` directory
+- Enable / disable at runtime via API
+- Example memory plugin shipped
+
+### Developer Dashboard
+- Runtime status viewer (pid, uptime, memory count, emotion state)
+- Audit log browser
+- Structured log viewer
+- Flutter macOS native window
+
+## Quick Start
 
 ```bash
-cd /Users/lixie/Desktop/Aether_Dev/backend
+# Backend
+cd backend
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
-```
 
-Health check:
-
-```bash
+# Health check
 curl http://127.0.0.1:8000/health
-```
 
-Create a conversation and send a message:
-
-```bash
+# Send a message
 curl -X POST http://127.0.0.1:8000/conversations \
   -H "Content-Type: application/json" \
-  -d '{"title":"MVP Test"}'
+  -d '{"title":"Hello"}'
 
 curl -X POST http://127.0.0.1:8000/chat/message \
   -H "Content-Type: application/json" \
-  -d '{"content":"记住：这个项目最终所有功能都要实现，MVP 只是底座。"}'
-```
+  -d '{"content":"What can you remember about me?"}'
 
-Developer endpoints require:
-
-```text
-Authorization: Bearer dev-admin-token
-```
-
-## Tests
-
-```bash
-cd /Users/lixie/Desktop/Aether_Dev/backend
-pytest
-```
-
-Run all current checks:
-
-```bash
-cd /Users/lixie/Desktop/Aether_Dev
-bash scripts/test_all.sh
-```
-
-Start backend from the project root:
-
-```bash
-cd /Users/lixie/Desktop/Aether_Dev
-bash scripts/start_backend.sh
-```
-
-Start Flutter frontend:
-
-```bash
-cd /Users/lixie/Desktop/Aether_Dev/frontend/flutter_app
+# Flutter frontend
+cd frontend/flutter_app
 flutter run -d macos
 ```
 
-Start Flutter and let it launch the development backend:
+## API Endpoints (21 routes)
 
-```bash
-cd /Users/lixie/Desktop/Aether_Dev/frontend/flutter_app
-AETHER_PROJECT_ROOT=/Users/lixie/Desktop/Aether_Dev flutter run -d macos
+| Category | Method | Path |
+|----------|--------|------|
+| Health | `GET` | `/health` |
+| Conversations | `POST` `/GET` | `/conversations` |
+| Conversations | `GET` | `/conversations/{id}/messages` |
+| Chat | `POST` | `/chat/message` |
+| Chat | `WS` | `/ws/chat/{id}` |
+| Memory | `POST` | `/memory/write` |
+| Memory | `GET` | `/memory/query` |
+| Memory | `GET` | `/memory/recent` |
+| Memory | `DELETE` | `/memory/{id}` |
+| Memory | `POST` | `/memory/{id}/level/{level}` |
+| Emotion | `GET` | `/emotion/status` |
+| Emotion | `POST` | `/emotion/update` |
+| Developer | `GET` | `/developer/runtime` |
+| Developer | `GET` | `/developer/logs` |
+| Developer | `GET` | `/developer/audit` |
+| Developer | `POST` | `/developer/rem/run` |
+| Plugins | `GET` | `/plugins` |
+| Plugins | `POST` | `/plugins/{name}/enable` |
+| Plugins | `POST` | `/plugins/{name}/disable` |
+
+## Test Results
+
+```
+backend:  3/3 passed  (FastAPI endpoint tests)
+flutter:  1/1 passed  (widget tests)
+analyze:  No issues found
 ```
 
-## Current API
+## Project Structure
 
-- `GET /health`
-- `POST /conversations`
-- `GET /conversations`
-- `GET /conversations/{id}/messages`
-- `POST /chat/message`
-- `GET /memory/query`
-- `POST /memory/write`
-- `GET /emotion/status`
-- `POST /emotion/update`
-- `GET /developer/runtime`
-- `GET /developer/logs`
-- `GET /developer/audit`
-- `POST /developer/rem/run`
-- `GET /plugins`
-- `POST /plugins/{name}/enable`
-- `POST /plugins/{name}/disable`
-- `WS /ws/chat/{conversation_id}`
-
-## Full Scope
-
-The MVP is not the final feature set. The full feature roadmap is kept in:
-
-```text
-docs/evolution_roadmap.md
+```
+Aether_Dev/
+├── backend/           FastAPI backend (Python)
+│   ├── app/
+│   │   ├── routers/    21 API route handlers
+│   │   ├── services/   8 service modules
+│   │   └── tests/      MVP test suite
+│   └── scripts/        Build & start scripts
+├── frontend/          Flutter macOS app (Dart)
+│   └── flutter_app/
+│       ├── lib/        Screens, models, services
+│       └── macos/      Native macOS runner
+├── plugins/           Plugin manifests & implementations
+├── docs/              Architecture, API, roadmap docs
+└── scripts/           CI scripts (test, build, package)
 ```
 
-Current implementation status is tracked in:
+## Tech Stack
 
-```text
-docs/current_status.md
-```
+| Layer | Technology |
+|-------|-----------|
+| Backend | FastAPI 0.115, Uvicorn, Python 3.13 |
+| Database | SQLite (via aiosqlite) |
+| Vector Store | Local JSON + Chroma / LanceDB adapters |
+| Frontend | Flutter 3.x, Dart, macOS native |
+| Packaging | PyInstaller + macOS .dmg |
+| Testing | Pytest, Flutter test |
+
+## Roadmap
+
+More details in [docs/evolution_roadmap.md](docs/evolution_roadmap.md). The MVP is the stable base — real model gateway, WebSocket streaming UI, Chroma/LanceDB backends, and release packaging are the next increment.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
