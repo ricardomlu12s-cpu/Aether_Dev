@@ -1,0 +1,27 @@
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+
+# Local runtime data
+.aether_data/
+
+# Flutter
+frontend/flutter_app/.dart_tool/
+frontend/flutter_app/build/
+frontend/flutter_app/.idea/
+
+# OMC state
+.omc/
+
+# PyInstaller
+backend/build/
+backend/dist/
+
+# macOS packaging outputs
+*.dmg
+*.pkg
+

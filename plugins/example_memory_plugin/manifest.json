@@ -1,0 +1,10 @@
+{
+  "name": "example_memory_plugin",
+  "version": "0.1.0",
+  "type": "memory_plugin",
+  "entrypoint": "plugin.py",
+  "permissions": ["memory:read", "memory:write"],
+  "enabled": false,
+  "config_schema": {}
+}
+
